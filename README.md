@@ -2,6 +2,6 @@
 in order to recording the learning process, so, create this repo store the demo.
 
 ## simples
-* 1. http server demo
-* 2. simple chat demo
-* 3. heart beat demo by idle event
+* http server demo
+* simple chat demo
+* heart beat demo by idle event
