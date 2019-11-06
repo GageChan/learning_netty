@@ -5,36 +5,43 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.logging.LogLevel;
-import io.netty.handler.logging.LoggingHandler;
 
 /**
- * step3 netty提供的超时事件的演示,其实就是心跳
+ * step3 netty心跳机制以及断线重连
  */
 public class HeartBeatServer {
 
-    public static void main(String[] args) throws Exception{
+    private int port;
+    private HeartBeatServerInitializer serverHandlerInitializer;
 
-        EventLoopGroup bossGroup = new NioEventLoopGroup();
+    public HeartBeatServer(int port) {
+        this.port = port;
+        this.serverHandlerInitializer = new HeartBeatServerInitializer();
+    }
+
+    public void start() {
+        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
-
-        ServerBootstrap bootstrap = new ServerBootstrap();
         try {
+            ServerBootstrap bootstrap = new ServerBootstrap();
             bootstrap.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
-                    .handler(new LoggingHandler(LogLevel.INFO))
-                    .childHandler(new HeartBeatServerInitializer());
-            ChannelFuture future = bootstrap.bind(1321).sync();
-            System.out.println("启动成功");
+                    .childHandler(this.serverHandlerInitializer);
+            // 绑定端口，开始接收进来的连接
+            ChannelFuture future = bootstrap.bind(port).sync();
+
+            System.out.println("Server start listen at " + port);
             future.channel().closeFuture().sync();
-            System.out.println("关闭服务器");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
+        } catch (Exception e) {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
+            e.printStackTrace();
         }
+    }
 
+    public static void main(String[] args) throws Exception {
+        int port = 1321;
+        new HeartBeatServer(port).start();
     }
 
 }
